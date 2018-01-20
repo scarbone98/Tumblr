@@ -10,14 +10,46 @@ import AlamofireImage
 class PhotosViewController: UIViewController,UITableViewDataSource, UITableViewDelegate {
     var posts: [[String: Any]] = []
     @IBOutlet weak var photosTable: UITableView!
-    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let vc = segue.destination as! PhotoDetailsViewController
+        let cell = sender as! UITableViewCell
+        let indexPath = photosTable.indexPath(for: cell)!
+        let post = posts[indexPath.section]
+        vc.data = post["caption"] as! String
+        vc.imageData = (self.photosTable.cellForRow(at: indexPath) as! PhotoCell).picture.image
+    }
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let headerView = UIView(frame: CGRect(x: 0, y: 0, width: 320, height: 50))
+        headerView.backgroundColor = UIColor(white: 1, alpha: 0.7)
+        let post = posts[section]
+        let profileView = UIImageView(frame: CGRect(x: 10, y: 10, width: 30, height: 30))
+        profileView.clipsToBounds = true
+        profileView.layer.cornerRadius = 15;
+        profileView.layer.borderColor = UIColor(white: 0.7, alpha: 0.8).cgColor
+        profileView.layer.borderWidth = 1;
+        let dateLabel = UILabel(frame: CGRect(x:145,y:0,width:400,height:50))
+        let date = post["date"] as! String
+        let dateArr = date.split(separator: " ")
+        let myDate = String(dateArr[0])
+        dateLabel.text = myDate
+        // Set the avatar
+        profileView.af_setImage(withURL: URL(string: "https://api.tumblr.com/v2/blog/humansofnewyork.tumblr.com/avatar")!)
+        headerView.addSubview(profileView)
+        headerView.addSubview(dateLabel)
+        return headerView
+    }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return 1
+    }
+    func numberOfSections(in tableView: UITableView) -> Int {
         return posts.count
     }
-    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 50
+    }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "PhotoCell", for: indexPath) as! PhotoCell
-        let post = posts[indexPath.row]
+        let post = posts[indexPath.section]
         if let photos = post["photos"] as? [[String: Any]] {
             let photo = photos[0]
             let originalSize = photo["original_size"] as! [String: Any]
